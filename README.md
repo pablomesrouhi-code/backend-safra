@@ -1,6 +1,9 @@
 # Safra Skin Backend
 
-Minimal FastAPI API for Safra Skin checkout: tier pricing, KSA phone validation, SQLite persistence, and optional Google Sheets / CAPI stubs.
+Minimal FastAPI API for Safra Skin checkout: tier pricing, KSA phone validation, MaxMind GeoIP, SQLite/Postgres, and optional Google Sheets / CAPI.
+
+**Frontend store:** https://github.com/pablomesrouhi-code/frontend-safra  
+**Project docs:** [`docs/`](./docs/) (specs, playbook, env templates)
 
 ## Quick start
 
