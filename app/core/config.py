@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     ORDER_NUMBER_PREFIX: str = "SS"
     UPSELL_PRICE_SAR: int = 99
 
+    # MaxMind GeoLite2 (optional — CAPI country + optional KSA-only orders)
+    MAXMIND_ACCOUNT_ID: str = ""
+    MAXMIND_LICENSE_KEY: str = ""
+    MAXMIND_GEOIP_DB_PATH: str = "./data/GeoLite2-Country.mmdb"
+    GEOIP_ENFORCE_KSA: bool = False
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
@@ -53,6 +59,16 @@ class Settings(BaseSettings):
     @property
     def snap_capi_enabled(self) -> bool:
         return bool(self.SNAP_PIXEL_ID and self.SNAP_ACCESS_TOKEN)
+
+    @property
+    def maxmind_enabled(self) -> bool:
+        return bool(self.MAXMIND_LICENSE_KEY.strip()) or self.geoip_db_path_resolved.is_file()
+
+    @property
+    def geoip_db_path_resolved(self):
+        from pathlib import Path
+
+        return Path(self.MAXMIND_GEOIP_DB_PATH)
 
 
 @lru_cache

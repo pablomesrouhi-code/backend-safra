@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from app.api.routes import health, orders, products
 from app.core.config import settings
 from app.core.database import init_db
+from app.services.geoip import init_geoip
 from app.services.orders import OrderValidationError
 
 logging.basicConfig(level=logging.INFO)
@@ -16,6 +17,7 @@ logging.basicConfig(level=logging.INFO)
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     init_db()
+    init_geoip()
     yield
 
 
