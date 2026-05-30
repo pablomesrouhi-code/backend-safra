@@ -36,9 +36,25 @@ Tier totals (unique SKUs): 1 → 199 SAR, 2 → 279 SAR, 3 → 349 SAR. Upsell a
 
 Response includes `order_id` like `SS-20260530-A1B2C3`.
 
+## Easypanel deploy
+
+| Setting | Value |
+|---------|--------|
+| Repo | `https://github.com/pablomesrouhi-code/backend-safra` |
+| Dockerfile | `Dockerfile` (repo root) |
+| Port | `8000` |
+| Health check | `GET /health` |
+
+Paste env vars from `.env.example`. **Required for production:**
+
+- `DATABASE_URL` → Postgres internal URL (`safraskin_database:5432`)
+- `CORS_ORIGINS` → `https://safraskin.online,https://www.safraskin.online`
+
+Optional: Sheets webhook + CAPI tokens (API works without them).
+
 ## Environment
 
-Copy `.env.example` to `.env`. SQLite is the default (`sqlite:///./safraskin.db`). Leave `GOOGLE_SHEETS_WEBHOOK_URL` and pixel tokens empty to run without external integrations.
+Copy `.env.example` to `.env`. SQLite is the default for local dev. Leave `GOOGLE_SHEETS_WEBHOOK_URL` and pixel tokens empty to run without external integrations.
 
 ## Docker
 
