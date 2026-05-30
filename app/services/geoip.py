@@ -15,12 +15,12 @@ _reader = None
 
 
 def _download_geolite_country(db_path: Path) -> bool:
-    if not settings.maxmind_license_key:
+    if not settings.MAXMIND_LICENSE_KEY.strip():
         return False
 
     url = (
         "https://download.maxmind.com/app/geoip_download"
-        f"?edition_id=GeoLite2-Country&license_key={settings.maxmind_license_key}&suffix=tar.gz"
+        f"?edition_id=GeoLite2-Country&license_key={settings.MAXMIND_LICENSE_KEY}&suffix=tar.gz"
     )
     try:
         with httpx.Client(timeout=60.0, follow_redirects=True) as client:
@@ -64,7 +64,7 @@ def init_geoip() -> None:
         return
 
     db_path = settings.geoip_db_path_resolved
-    if not db_path.is_file() and settings.maxmind_license_key:
+    if not db_path.is_file() and settings.MAXMIND_LICENSE_KEY.strip():
         _download_geolite_country(db_path)
 
     if not db_path.is_file():
