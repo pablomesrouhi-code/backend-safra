@@ -71,7 +71,8 @@ def validate_and_price(payload: CreateOrderRequest) -> dict:
             raise OrderValidationError("سعر الإضافة غير صحيح", "PRICE_MISMATCH")
         upsell_price = expected
 
-    tier_count, tier_total = calculate_tier(slugs)
+    total_qty = sum(item.qty for item in payload.items)
+    tier_count, tier_total = calculate_tier(slugs, total_qty)
     grand_total = calculate_grand_total(tier_total, upsell_accepted, upsell_price)
 
     return {

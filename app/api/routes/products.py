@@ -6,28 +6,28 @@ router = APIRouter(prefix="/api/v1", tags=["products"])
 
 PRODUCTS: list[ProductOut] = [
     ProductOut(
-        slug="freshguard",
-        sku="SS-FRESHGUARD-01",
-        name_ar="نفس واثق",
-        name_en="FreshGuard Oral Protocol",
+        slug="cyclecalm",
+        sku="BL-CYCLE-01",
+        name_ar="هدوء الدورة",
+        name_en="Cycle Calm PMS Gummies",
         unit_price_sar=199,
-        cross_sell_slugs=["heatshield", "underguard"],
+        cross_sell_slugs=["oralflora", "clearbalance"],
     ),
     ProductOut(
-        slug="heatshield",
-        sku="SS-HEATSHIELD-02",
-        name_ar="درع الحر",
-        name_en="HeatShield Body Powder",
+        slug="oralflora",
+        sku="BL-ORAL-02",
+        name_ar="فلورا الفم",
+        name_en="Oral Flora Probiotic Gummies",
         unit_price_sar=199,
-        cross_sell_slugs=["freshguard", "underguard"],
+        cross_sell_slugs=["cyclecalm", "clearbalance"],
     ),
     ProductOut(
-        slug="underguard",
-        sku="SS-UNDERGUARD-03",
-        name_ar="ثقة الإبط",
-        name_en="UnderGuard Deodorant Duo",
+        slug="clearbalance",
+        sku="BL-SKIN-03",
+        name_ar="توازن البشرة",
+        name_en="Clear Balance Skin Gummies",
         unit_price_sar=199,
-        cross_sell_slugs=["freshguard", "heatshield"],
+        cross_sell_slugs=["cyclecalm", "oralflora"],
     ),
 ]
 
