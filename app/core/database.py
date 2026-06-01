@@ -5,11 +5,22 @@ from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.core.config import settings
 
-connect_args = (
-    {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
-)
 
-engine = create_engine(settings.DATABASE_URL, connect_args=connect_args)
+def normalize_database_url(url: str) -> str:
+    """Easypanel often uses postgres:// — SQLAlchemy needs postgresql+psycopg2://"""
+    if url.startswith("sqlite"):
+        return url
+    if url.startswith("postgres://"):
+        return "postgresql+psycopg2://" + url[len("postgres://") :]
+    if url.startswith("postgresql://") and not url.startswith("postgresql+"):
+        return "postgresql+psycopg2://" + url[len("postgresql://") :]
+    return url
+
+
+_db_url = normalize_database_url(settings.DATABASE_URL)
+connect_args = {"check_same_thread": False} if _db_url.startswith("sqlite") else {}
+
+engine = create_engine(_db_url, connect_args=connect_args, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
