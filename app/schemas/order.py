@@ -21,3 +21,4 @@ class CreateOrderResponse(BaseModel):
     upsell_total_sar: int
     status: str
     thank_you_path: str
+    sheets_synced: bool = False

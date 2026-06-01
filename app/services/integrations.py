@@ -10,59 +10,70 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
-async def _post_google_apps_script(client: httpx.AsyncClient, url: str, payload: dict) -> httpx.Response:
-    """
-    Google Apps Script /exec returns 302 to googleusercontent.com.
-    Some clients drop the POST body on 302 — replay POST to Location when needed.
-    """
-    body = json.dumps(payload, ensure_ascii=False)
-    headers = {"Content-Type": "application/json"}
-    resp = await client.post(url, content=body, headers=headers, follow_redirects=False)
+async def _post_with_redirect(
+    client: httpx.AsyncClient,
+    url: str,
+    *,
+    data: dict | None = None,
+    content: str | None = None,
+    headers: dict | None = None,
+) -> httpx.Response:
+    """Google Apps Script /exec 302s to googleusercontent.com — replay POST to Location."""
+    resp = await client.post(url, data=data, content=content, headers=headers, follow_redirects=False)
     if resp.status_code in (301, 302, 303, 307, 308):
         location = resp.headers.get("location")
         if location:
-            resp = await client.post(location, content=body, headers=headers, follow_redirects=False)
+            resp = await client.post(
+                location, data=data, content=content, headers=headers, follow_redirects=False
+            )
     return resp
 
 
 async def sync_order_to_sheets(payload: dict) -> bool:
     if not settings.sheets_enabled:
         logger.warning(
-            "Google Sheets webhook not configured (GOOGLE_SHEETS_WEBHOOK_URL empty); order %s not synced",
+            "GOOGLE_SHEETS_WEBHOOK_URL is empty — order %s saved in DB but NOT sent to Sheet",
             payload.get("orderid"),
         )
         return False
 
     url = settings.GOOGLE_SHEETS_WEBHOOK_URL.strip()
+    body_str = json.dumps(payload, ensure_ascii=False)
+
     try:
-        async with httpx.AsyncClient(timeout=20.0) as client:
-            resp = await _post_google_apps_script(client, url, payload)
-            text = (resp.text or "").strip()
+        async with httpx.AsyncClient(timeout=25.0) as client:
+            # Form field survives Google redirect better than raw JSON POST
+            resp = await _post_with_redirect(client, url, data={"payload": body_str})
+
             if resp.status_code >= 400:
                 logger.error(
                     "Google Sheets HTTP %s orderid=%s body=%s",
                     resp.status_code,
                     payload.get("orderid"),
-                    text[:500],
+                    (resp.text or "")[:500],
                 )
                 return False
+
+            text = (resp.text or "").strip()
             try:
                 result = json.loads(text) if text else {}
             except json.JSONDecodeError:
                 logger.error(
-                    "Google Sheets non-JSON response orderid=%s body=%s",
+                    "Google Sheets non-JSON orderid=%s body=%s",
                     payload.get("orderid"),
                     text[:500],
                 )
                 return False
+
             if not result.get("success"):
                 logger.error(
-                    "Google Sheets rejected orderid=%s response=%s",
+                    "Google Sheets error orderid=%s response=%s",
                     payload.get("orderid"),
                     result,
                 )
                 return False
-        logger.info("Google Sheets sync OK orderid=%s", payload.get("orderid"))
+
+        logger.info("Google Sheets OK orderid=%s", payload.get("orderid"))
         return True
     except Exception:
         logger.exception("Google Sheets sync failed orderid=%s", payload.get("orderid"))

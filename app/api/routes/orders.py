@@ -25,4 +25,5 @@ async def post_order(
         upsell_total_sar=upsell_total,
         status=order.status,
         thank_you_path=f"/thank-you/{order.order_number}",
+        sheets_synced=order.sheets_synced,
     )
