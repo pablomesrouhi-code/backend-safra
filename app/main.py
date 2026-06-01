@@ -1,5 +1,5 @@
+import asyncio
 import logging
-import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -8,41 +8,36 @@ from fastapi.responses import JSONResponse
 
 from app.api.routes import health, orders, products
 from app.core.config import settings
-from app.core.database import init_db, mask_database_url, normalized_database_url
+from app.core.database import mask_database_url, normalized_database_url, try_init_db
 from app.services.geoip import init_geoip
 from app.services.orders import OrderValidationError
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
-def _init_db_with_retry(max_attempts: int = 20, delay_sec: float = 3.0) -> None:
-    last_err: Exception | None = None
-    for attempt in range(1, max_attempts + 1):
-        try:
-            init_db()
-            logging.info("Database ready (attempt %s)", attempt)
+async def _database_warmup_loop() -> None:
+    """Connect to Postgres in background so API starts fast (no 502 while DB boots)."""
+    for attempt in range(1, 31):
+        if try_init_db():
+            logger.info("Database connected on attempt %s", attempt)
             return
-        except Exception as exc:
-            last_err = exc
-            logging.warning(
-                "Database not ready (attempt %s/%s): %s",
-                attempt,
-                max_attempts,
-                exc,
-            )
-            if attempt < max_attempts:
-                time.sleep(delay_sec)
-    raise RuntimeError(f"Database init failed after {max_attempts} attempts") from last_err
+        await asyncio.sleep(2)
+    logger.error(
+        "DATABASE STILL DOWN after 60s. Fix DATABASE_URL in Easypanel:\n"
+        "  postgres://postgres:PASSWORD@safraskin_database:5432/safraskin?sslmode=disable"
+    )
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    logging.info("DATABASE_URL (masked): %s", mask_database_url(normalized_database_url()))
-    _init_db_with_retry()
+    logger.info("Safra Skin API starting")
+    logger.info("DATABASE_URL (masked): %s", mask_database_url(normalized_database_url()))
+    asyncio.create_task(_database_warmup_loop())
     try:
         init_geoip()
     except Exception:
-        logging.exception("GeoIP init failed; API will run without MaxMind")
+        logger.exception("GeoIP init failed; API will run without MaxMind")
     yield
 
 
@@ -71,3 +66,16 @@ async def order_validation_handler(_request: Request, exc: OrderValidationError)
         status_code=400,
         content={"detail": exc.detail, "code": exc.code},
     )
+
+
+@app.exception_handler(RuntimeError)
+async def runtime_error_handler(_request: Request, exc: RuntimeError) -> JSONResponse:
+    if "Database not ready" in str(exc):
+        return JSONResponse(
+            status_code=503,
+            content={
+                "detail": "قاعدة البيانات غير متصلة. تحقق من DATABASE_URL في Easypanel.",
+                "code": "DATABASE_NOT_READY",
+            },
+        )
+    raise exc
