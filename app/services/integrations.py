@@ -3,6 +3,7 @@
 import json
 import logging
 import re
+from urllib.parse import quote
 
 import httpx
 
@@ -17,12 +18,6 @@ def normalize_sheets_webhook_url(url: str) -> str:
     if "/macros/s/" in u and u.rstrip("/").endswith("/dev"):
         u = re.sub(r"/dev/?$", "/exec", u.rstrip("/"))
     return u
-
-
-def _resolve_redirect_url(response: httpx.Response, location: str) -> str:
-    if location.startswith("http://") or location.startswith("https://"):
-        return location
-    return str(response.url.join(location))
 
 
 def _parse_sheets_http_response(resp: httpx.Response, orderid: str) -> tuple[bool, str | None]:
@@ -51,8 +46,8 @@ def _parse_sheets_http_response(resp: httpx.Response, orderid: str) -> tuple[boo
 
 async def sync_order_to_sheets(payload: dict) -> tuple[bool, str | None]:
     """
-    POST order row to Google Apps Script web app.
-    Returns (synced, error_message).
+    Send order to Google Apps Script.
+    GET ?payload= first (avoids HTTP 405 on POST redirect).
     """
     if not settings.sheets_enabled:
         msg = "GOOGLE_SHEETS_WEBHOOK_URL is empty"
@@ -65,51 +60,32 @@ async def sync_order_to_sheets(payload: dict) -> tuple[bool, str | None]:
     last_error: str | None = None
 
     async with httpx.AsyncClient(timeout=30.0) as client:
-        attempts: list[tuple[str, dict]] = [
-            (
-                "form+redirect",
-                {"data": {"payload": body_str}, "follow_redirects": True},
-            ),
-            (
-                "json+redirect",
-                {
-                    "content": body_str,
-                    "headers": {"Content-Type": "application/json"},
-                    "follow_redirects": True,
-                },
-            ),
-        ]
-
-        for name, kwargs in attempts:
-            try:
-                resp = await client.post(url, **kwargs)
-                ok, err = _parse_sheets_http_response(resp, orderid)
-                if ok:
-                    return True, None
-                last_error = f"{name}: {err}"
-                logger.warning("Sheets attempt failed (%s) orderid=%s: %s", name, orderid, err)
-            except Exception as exc:
-                last_error = f"{name}: {exc}"
-                logger.warning("Sheets attempt exception (%s) orderid=%s: %s", name, orderid, exc)
-
-        # Manual redirect replay (302 body loss workaround)
+        # 1) GET with payload query (most reliable for Apps Script)
         try:
-            resp = await client.post(
-                url, data={"payload": body_str}, follow_redirects=False
-            )
-            if resp.status_code in (301, 302, 303, 307, 308):
-                location = resp.headers.get("location")
-                if location:
-                    target = _resolve_redirect_url(resp, location)
-                    resp = await client.post(
-                        target, data={"payload": body_str}, follow_redirects=False
-                    )
+            get_url = f"{url}?payload={quote(body_str)}"
+            resp = await client.get(get_url, follow_redirects=True)
             ok, err = _parse_sheets_http_response(resp, orderid)
             if ok:
                 return True, None
-            last_error = f"manual-redirect: {err}"
+            last_error = f"GET: {err}"
+            logger.warning("Sheets GET failed orderid=%s: %s", orderid, err)
         except Exception as exc:
-            last_error = f"manual-redirect: {exc}"
+            last_error = f"GET: {exc}"
+            logger.warning("Sheets GET exception orderid=%s: %s", orderid, exc)
+
+        # 2) POST form
+        try:
+            resp = await client.post(
+                url,
+                data={"payload": body_str},
+                follow_redirects=True,
+            )
+            ok, err = _parse_sheets_http_response(resp, orderid)
+            if ok:
+                return True, None
+            last_error = f"POST: {err}"
+        except Exception as exc:
+            last_error = f"POST: {exc}"
 
     logger.error("Google Sheets sync failed orderid=%s: %s", orderid, last_error)
     return False, last_error
