@@ -1,6 +1,5 @@
 import random
 import string
-from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
@@ -11,11 +10,13 @@ from app.services.geoip import lookup_ip
 from app.services.integrations import fire_purchase_events, sync_order_to_sheets
 from app.services.phone import normalize_ksa_phone
 from app.services.pricing import (
+    SLUG_TO_NAME_AR,
     VALID_SKUS,
     calculate_grand_total,
     calculate_tier,
     slug_for_sku,
 )
+from app.services.sheets import build_sheets_payload
 
 
 class OrderValidationError(ValueError):
@@ -26,10 +27,8 @@ class OrderValidationError(ValueError):
 
 
 def generate_order_number() -> str:
-    date_part = datetime.now(timezone.utc).strftime("%Y%m%d")
-    suffix = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    prefix = settings.ORDER_NUMBER_PREFIX
-    return f"{prefix}-{date_part}-{suffix}"
+    suffix = "".join(random.choices(string.ascii_lowercase + string.digits, k=8))
+    return f"{settings.ORDER_NUMBER_PREFIX}{suffix}"
 
 
 def validate_and_price(payload: CreateOrderRequest) -> dict:
@@ -139,15 +138,14 @@ async def create_order(
     db.commit()
     db.refresh(order)
 
-    sheets_payload = {
-        "order_id": order.order_number,
-        "customer_name": order.customer_name,
-        "customer_phone": order.customer_phone,
-        "grand_total_sar": order.grand_total_sar,
-        "tier_total_sar": order.tier_total_sar,
-        "items": priced["line_items"],
-        "upsell_sku": order.upsell_sku,
-    }
+    sheets_payload = build_sheets_payload(
+        order,
+        priced["line_items"],
+        upsell_accepted=priced["upsell_accepted"],
+        upsell_sku=order.upsell_sku,
+        slug_for_sku=slug_for_sku,
+        slug_to_name_ar=SLUG_TO_NAME_AR,
+    )
     synced = await sync_order_to_sheets(sheets_payload)
     if synced:
         order.sheets_synced = True

@@ -1,29 +1,24 @@
 /**
- * Safra Skin — Google Sheets Order Webhook Receiver
+ * Safra Skin — Google Sheets order webhook (no secret)
+ *
+ * Sheet: https://docs.google.com/spreadsheets/d/12UOny_tW2vOVclTSe-jLoMeI_KqYZPGZ3TyfjyxBWWw/edit
  *
  * Setup:
- * 1. Create Google Sheet with tab named "Orders"
- * 2. Import order-template.csv as header row
- * 3. Extensions → Apps Script → paste this file
- * 4. Set SECRET below to match GOOGLE_SHEETS_SECRET in backend
- * 5. Deploy → New deployment → Web app
+ * 1. Open the sheet → tab must be named "Orders"
+ * 2. Row 1 headers (import order-template.csv):
+ *    date | orderid | country | name | phone | product | sku | quantity | total_price | currency | status
+ * 3. Extensions → Apps Script → paste this file → Save
+ * 4. Deploy → New deployment → Web app
  *    - Execute as: Me
  *    - Who has access: Anyone
- * 6. Copy deployment URL → GOOGLE_SHEETS_WEBHOOK_URL in backend env
+ * 5. Copy deployment URL → GOOGLE_SHEETS_WEBHOOK_URL in backend Easypanel env
  */
 
-const SECRET = 'your_random_secret_string'; // MUST match backend GOOGLE_SHEETS_SECRET
 const SHEET_NAME = 'Orders';
 
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
-
-    if (data.secret !== SECRET) {
-      return ContentService.createTextOutput(
-        JSON.stringify({ success: false, error: 'Unauthorized' })
-      ).setMimeType(ContentService.MimeType.JSON);
-    }
 
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
     if (!sheet) {
@@ -31,28 +26,21 @@ function doPost(e) {
     }
 
     sheet.appendRow([
-      data.order_id || '',
-      data.created_at || new Date().toISOString(),
-      data.customer_name || '',
-      data.customer_phone || '',
-      data.items_json || '',
-      data.items_display || '',
-      data.tier_count || '',
-      data.tier_total_sar || '',
-      data.upsell_accepted ? 'YES' : 'NO',
-      data.upsell_product || '',
-      data.upsell_price_sar || 0,
-      data.grand_total_sar || '',
-      data.payment || 'COD',
-      data.status || 'pending_confirmation',
-      data.utm_source || '',
-      data.utm_campaign || '',
-      data.event_id || '',
-      data.notes || '',
+      data.date || '',
+      data.orderid || '',
+      data.country || 'KSA',
+      data.name || '',
+      data.phone || '',
+      data.product || '',
+      data.sku || '',
+      data.quantity || '',
+      data.total_price !== undefined && data.total_price !== null ? data.total_price : '',
+      data.currency || 'SAR',
+      data.status !== undefined && data.status !== null ? data.status : '',
     ]);
 
     return ContentService.createTextOutput(
-      JSON.stringify({ success: true, order_id: data.order_id })
+      JSON.stringify({ success: true, orderid: data.orderid })
     ).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(
@@ -63,6 +51,6 @@ function doPost(e) {
 
 function doGet() {
   return ContentService.createTextOutput(
-    JSON.stringify({ status: 'Safra Skin webhook active' })
+    JSON.stringify({ status: 'Safra Skin order webhook active', sheet: SHEET_NAME })
   ).setMimeType(ContentService.MimeType.JSON);
 }

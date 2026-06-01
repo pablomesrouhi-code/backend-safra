@@ -1,97 +1,96 @@
 # 16 — Google Sheets Integration
 
+## Sheet
+
+**Ops sheet:** https://docs.google.com/spreadsheets/d/12UOny_tW2vOVclTSe-jLoMeI_KqYZPGZ3TyfjyxBWWw/edit
+
+Tab name: **`Orders`**
+
+Import [sheets/order-template.csv](./sheets/order-template.csv) as row 1 headers:
+
+`date | orderid | country | name | phone | product | sku | quantity | total_price | currency | status`
+
 ## Flow
 
 ```
 Frontend → POST api.safraskin.online/api/v1/orders
-  → Backend saves Postgres
-  → Backend POST → Google Apps Script Web App URL
-  → Apps Script appends row to Sheet
-  → Ops team calls customer for COD confirmation (manual v1)
+  → Backend saves DB
+  → Backend POST JSON → Google Apps Script Web App URL (no secret)
+  → Apps Script appends one row
+  → Ops calls customer for COD confirmation
 ```
 
-## Sheet Template
-
-Import [sheets/order-template.csv](./sheets/order-template.csv) as header row in Google Sheet tab `Orders`.
-
-## Column Definitions
+## Row format (one row per order)
 
 | Column | Source | Example |
 |--------|--------|---------|
-| order_id | backend | SS-20260529-A1B2 |
-| created_at | ISO8601 | 2026-05-29T14:30:00Z |
-| customer_name | form | فاطمة |
-| customer_phone | E.164 | +966501234567 |
-| items_json | JSON string | [{"slug":"freshguard","qty":2}] |
-| items_display | human AR | فريش‌گارد ×2 |
-| tier_count | int | 2 |
-| tier_total_sar | int | 279 |
-| upsell_accepted | YES/NO | YES |
-| upsell_product | AR name | أندر‌گارد |
-| upsell_price_sar | int | 99 |
-| grand_total_sar | int | 378 |
-| payment | COD | COD |
-| status | pending_confirmation | |
-| utm_source | | tiktok |
-| utm_campaign | | freshguard_may |
-| event_id | uuid | dedup ref |
-| notes | | |
+| date | KSA `dd/mm/yyyy` | `01/05/2026` |
+| orderid | backend `ORDER_NUMBER_PREFIX` + random | `nama8k2m9x1p` |
+| country | fixed | `KSA` |
+| name | checkout form | `فاطمة` |
+| phone | E.164 without `+` | `96650475233` |
+| product | Arabic names, `/` separated | `هدوء الدورة/فلورا الفم` |
+| sku | product SKUs, `/` separated | `SK847291CY/SK295103OR` |
+| quantity | qty per line, `/` separated | `2` or `2/1` or `2/2/2` |
+| total_price | grand total SAR | `378` |
+| currency | fixed | `SAR` |
+| status | **empty** on insert | |
 
-## Backend Webhook Payload
+### Product SKUs
 
-```python
-# services/sheets.py
-async def sync_order_to_sheet(order: Order) -> bool:
-    payload = {
-        "secret": settings.GOOGLE_SHEETS_SECRET,
-        "order_id": order.order_number,
-        "created_at": order.created_at.isoformat(),
-        "customer_name": order.customer_name,
-        "customer_phone": order.customer_phone,
-        "items_json": json.dumps(order.items),
-        "items_display": format_items_ar(order.items),
-        "tier_count": order.tier_count,
-        "tier_total_sar": order.tier_total_sar,
-        "upsell_accepted": order.upsell_accepted,
-        "upsell_product": order.upsell_slug,
-        "upsell_price_sar": order.upsell_price_sar or 0,
-        "grand_total_sar": order.grand_total_sar,
-        "payment": "COD",
-        "status": order.status,
-        "utm_source": order.utm_source,
-        "utm_campaign": order.utm_campaign,
-        "event_id": order.event_id,
-    }
-    async with httpx.AsyncClient() as client:
-        r = await client.post(settings.GOOGLE_SHEETS_WEBHOOK_URL, json=payload, timeout=10)
-        return r.status_code == 200
+| Slug | SKU | Arabic name |
+|------|-----|-------------|
+| cyclecalm | `SK847291CY` | هدوء الدورة |
+| oralflora | `SK295103OR` | فلورا الفم |
+| clearbalance | `SK716408CB` | توازن البشرة |
+
+Legacy SKUs (`BL-CYCLE-01`, etc.) still accepted by the API for old carts.
+
+## Backend webhook payload
+
+Built in `app/services/sheets.py`:
+
+```json
+{
+  "date": "01/05/2026",
+  "orderid": "nama8k2m9x1p",
+  "country": "KSA",
+  "name": "فاطمة",
+  "phone": "96650475233",
+  "product": "هدوء الدورة/فلورا الفم",
+  "sku": "SK847291CY/SK295103OR",
+  "quantity": "2/1",
+  "total_price": 378,
+  "currency": "SAR",
+  "status": ""
+}
 ```
 
-## Apps Script
+Env: `GOOGLE_SHEETS_WEBHOOK_URL` — Apps Script deployment URL only (no secret).
 
-Deploy [sheets/google-apps-script.js](./sheets/google-apps-script.js):
+## Apps Script deploy
 
-1. Open Google Sheet → Extensions → Apps Script
-2. Paste script
-3. Set `SECRET` constant to match `GOOGLE_SHEETS_SECRET`
-4. Deploy → Web app → Execute as: Me → Anyone
-5. Copy URL → `GOOGLE_SHEETS_WEBHOOK_URL` in backend env
+1. Open the [Google Sheet](https://docs.google.com/spreadsheets/d/12UOny_tW2vOVclTSe-jLoMeI_KqYZPGZ3TyfjyxBWWw/edit)
+2. Tab **Orders** → headers from `order-template.csv`
+3. **Extensions → Apps Script** → paste [sheets/google-apps-script.js](./sheets/google-apps-script.js) → **Save**
+4. **Deploy → New deployment → Web app**
+   - Execute as: **Me**
+   - Who has access: **Anyone**
+5. Copy URL (ends with `/exec`) → Easypanel backend env:
 
-## Retry Logic
+```env
+GOOGLE_SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
+ORDER_NUMBER_PREFIX=nama
+```
 
-If sheet sync fails:
-- Set `orders.sheets_synced = false`
-- Log error
-- Optional cron retry (v2)
+6. Test: open the deployment URL in browser → `{"status":"Safra Skin order webhook active",...}`
 
-## Ops Workflow
+## Retry
 
-1. New row appears in Sheet
-2. Team calls customer to confirm order (manual v1)
-3. Update status column manually or via admin v2
+If sheet sync fails: `orders.sheets_synced = false`, error logged. Order still saved in DB.
 
-## Security
+## Ops workflow
 
-- Validate `secret` in Apps Script before append
-- Do not expose webhook URL publicly
-- Sheet access restricted to ops team Google accounts
+1. New row appears in Sheet (status empty)
+2. Team calls customer to confirm COD
+3. Update **status** manually in the sheet

@@ -1,10 +1,13 @@
 TIER_PRICES: dict[int, int] = {1: 199, 2: 279, 3: 349}
 
 SKU_TO_SLUG: dict[str, str] = {
+    "SK847291CY": "cyclecalm",
+    "SK295103OR": "oralflora",
+    "SK716408CB": "clearbalance",
+    # legacy SKUs (old carts / imports)
     "BL-CYCLE-01": "cyclecalm",
     "BL-ORAL-02": "oralflora",
     "BL-SKIN-03": "clearbalance",
-    # legacy Safra Skin SKUs → new catalog
     "SS-FRESHGUARD-01": "oralflora",
     "SS-HEATSHIELD-02": "cyclecalm",
     "SS-UNDERGUARD-03": "clearbalance",
@@ -12,9 +15,15 @@ SKU_TO_SLUG: dict[str, str] = {
 }
 
 SLUG_TO_SKU: dict[str, str] = {
-    "cyclecalm": "BL-CYCLE-01",
-    "oralflora": "BL-ORAL-02",
-    "clearbalance": "BL-SKIN-03",
+    "cyclecalm": "SK847291CY",
+    "oralflora": "SK295103OR",
+    "clearbalance": "SK716408CB",
+}
+
+SLUG_TO_NAME_AR: dict[str, str] = {
+    "cyclecalm": "هدوء الدورة",
+    "oralflora": "فلورا الفم",
+    "clearbalance": "توازن البشرة",
 }
 
 VALID_SKUS = frozenset(SKU_TO_SLUG.keys())

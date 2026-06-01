@@ -16,7 +16,6 @@ class Settings(BaseSettings):
     )
 
     GOOGLE_SHEETS_WEBHOOK_URL: str = ""
-    GOOGLE_SHEETS_SECRET: str = ""
 
     META_PIXEL_ID: str = ""
     META_ACCESS_TOKEN: str = ""
@@ -31,7 +30,7 @@ class Settings(BaseSettings):
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
 
-    ORDER_NUMBER_PREFIX: str = "SS"
+    ORDER_NUMBER_PREFIX: str = "nama"
     UPSELL_PRICE_SAR: int = 99
 
     # MaxMind GeoLite2 (optional — CAPI country + optional KSA-only orders)

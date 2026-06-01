@@ -75,7 +75,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     CORS_ORIGINS: str = "https://safraskin.online,https://www.safraskin.online"
     GOOGLE_SHEETS_WEBHOOK_URL: str
-    GOOGLE_SHEETS_SECRET: str = ""
+    ORDER_NUMBER_PREFIX: str = "nama"
 
     # Meta CAPI
     META_PIXEL_ID: str = ""

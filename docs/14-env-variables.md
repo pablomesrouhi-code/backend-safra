@@ -34,9 +34,10 @@ API_HOST=0.0.0.0
 API_PORT=8000
 CORS_ORIGINS=https://safraskin.online,https://www.safraskin.online
 
-# Google Sheets webhook (Apps Script deployment URL)
+# Google Sheets webhook (Apps Script deployment URL — no secret)
+# Sheet: https://docs.google.com/spreadsheets/d/12UOny_tW2vOVclTSe-jLoMeI_KqYZPGZ3TyfjyxBWWw/edit
 GOOGLE_SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
-GOOGLE_SHEETS_SECRET=your_random_secret_string
+ORDER_NUMBER_PREFIX=nama
 
 # Meta Conversions API
 META_PIXEL_ID=

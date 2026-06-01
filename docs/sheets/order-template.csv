@@ -1,1 +1,1 @@
-order_id,created_at,customer_name,customer_phone,items_json,items_display,tier_count,tier_total_sar,upsell_accepted,upsell_product,upsell_price_sar,grand_total_sar,payment,status,utm_source,utm_campaign,event_id,notes
+date,orderid,country,name,phone,product,sku,quantity,total_price,currency,status

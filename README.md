@@ -29,15 +29,15 @@ Point the frontend at `NEXT_PUBLIC_API_URL=http://localhost:8000`.
 {
   "customer_name": "فاطمة",
   "customer_phone": "+966501234567",
-  "items": [{ "sku": "SS-FRESHGUARD-01", "qty": 1 }],
-  "upsell_sku": "SS-UNDERGUARD-03",
+  "items": [{ "sku": "SK847291CY", "qty": 2 }],
+  "upsell_sku": "SK716408CB",
   "upsell_price_sar": 99
 }
 ```
 
 Tier totals (unique SKUs): 1 → 199 SAR, 2 → 279 SAR, 3 → 349 SAR. Upsell adds 99 SAR when `upsell_sku` is set.
 
-Response includes `order_id` like `SS-20260530-A1B2C3`.
+Response includes `order_id` like `nama8k2m9x1p`. Each order is also POSTed to Google Sheets when `GOOGLE_SHEETS_WEBHOOK_URL` is set (see `docs/16-google-sheets-integration.md`).
 
 ## Easypanel deploy
 
