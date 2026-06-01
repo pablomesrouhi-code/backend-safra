@@ -105,8 +105,15 @@ function doPost(e) {
   }
 }
 
-function doGet() {
+function doGet(e) {
   try {
+    if (e && e.parameter && e.parameter.payload) {
+      var data = JSON.parse(e.parameter.payload);
+      appendOrderRow_(data);
+      return ContentService.createTextOutput(
+        JSON.stringify({ success: true, orderid: data.orderid })
+      ).setMimeType(ContentService.MimeType.JSON);
+    }
     getOrdersSheet_();
     return ContentService.createTextOutput(
       JSON.stringify({
@@ -117,7 +124,7 @@ function doGet() {
     ).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(
-      JSON.stringify({ status: 'error', error: String(err.message || err) })
+      JSON.stringify({ success: false, error: String(err.message || err) })
     ).setMimeType(ContentService.MimeType.JSON);
   }
 }
