@@ -20,6 +20,26 @@ def normalize_sheets_webhook_url(url: str) -> str:
     return u
 
 
+def validate_sheets_webhook_url(url: str) -> str | None:
+    """Return error message if URL format is wrong."""
+    u = url.strip()
+    if not u:
+        return "GOOGLE_SHEETS_WEBHOOK_URL is empty"
+    if "docs.google.com/spreadsheets" in u or "spreadsheets/d/" in u:
+        return (
+            "Wrong URL: you pasted the Sheet link. "
+            "Use Apps Script Deploy → Web app URL ending in /exec"
+        )
+    if "script.google.com/macros" not in u:
+        return (
+            "Wrong URL: must be https://script.google.com/macros/s/.../exec "
+            "(from Apps Script → Deploy → Web app)"
+        )
+    if "/exec" not in u and "/dev" not in u:
+        return "Wrong URL: must end with /exec (Web app deployment URL)"
+    return None
+
+
 def _parse_sheets_http_response(resp: httpx.Response, orderid: str) -> tuple[bool, str | None]:
     text = (resp.text or "").strip()
     if resp.status_code >= 400:
@@ -54,7 +74,13 @@ async def sync_order_to_sheets(payload: dict) -> tuple[bool, str | None]:
         logger.warning("%s — order %s", msg, payload.get("orderid"))
         return False, msg
 
-    url = normalize_sheets_webhook_url(settings.GOOGLE_SHEETS_WEBHOOK_URL)
+    raw_url = settings.GOOGLE_SHEETS_WEBHOOK_URL
+    url_error = validate_sheets_webhook_url(raw_url)
+    if url_error:
+        logger.error("%s — order %s", url_error, payload.get("orderid"))
+        return False, url_error
+
+    url = normalize_sheets_webhook_url(raw_url)
     body_str = json.dumps(payload, ensure_ascii=False)
     orderid = payload.get("orderid", "?")
     last_error: str | None = None
@@ -89,8 +115,13 @@ async def sync_order_to_sheets(payload: dict) -> tuple[bool, str | None]:
 
     if last_error and "is not defined" in last_error:
         last_error = (
-            f"{last_error} — Replace ALL Apps Script code with docs/sheets/google-apps-script.js "
-            "and Deploy > New deployment"
+            f"{last_error} — Replace ALL Apps Script code and Deploy > New deployment"
+        )
+    if last_error and "404" in last_error:
+        last_error = (
+            "Webhook URL returns 404 (wrong or old deployment). "
+            "Apps Script → Deploy → New deployment → copy new /exec URL → "
+            "update GOOGLE_SHEETS_WEBHOOK_URL in Easypanel → Redeploy backend"
         )
 
     logger.error("Google Sheets sync failed orderid=%s: %s", orderid, last_error)
