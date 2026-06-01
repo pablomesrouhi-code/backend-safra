@@ -146,7 +146,7 @@ async def create_order(
         slug_for_sku=slug_for_sku,
         slug_to_name_ar=SLUG_TO_NAME_AR,
     )
-    synced = await sync_order_to_sheets(sheets_payload)
+    synced, sheets_sync_error = await sync_order_to_sheets(sheets_payload)
     if synced:
         order.sheets_synced = True
         db.commit()
@@ -162,4 +162,5 @@ async def create_order(
         }
     )
 
+    order.sheets_sync_error = sheets_sync_error  # type: ignore[attr-defined]
     return order

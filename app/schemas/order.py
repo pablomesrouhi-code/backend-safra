@@ -22,3 +22,4 @@ class CreateOrderResponse(BaseModel):
     status: str
     thank_you_path: str
     sheets_synced: bool = False
+    sheets_sync_error: str | None = None

@@ -26,4 +26,5 @@ async def post_order(
         status=order.status,
         thank_you_path=f"/thank-you/{order.order_number}",
         sheets_synced=order.sheets_synced,
+        sheets_sync_error=getattr(order, "sheets_sync_error", None),
     )
