@@ -87,6 +87,12 @@ async def sync_order_to_sheets(payload: dict) -> tuple[bool, str | None]:
         except Exception as exc:
             last_error = f"POST: {exc}"
 
+    if last_error and "is not defined" in last_error:
+        last_error = (
+            f"{last_error} — Replace ALL Apps Script code with docs/sheets/google-apps-script.js "
+            "and Deploy > New deployment"
+        )
+
     logger.error("Google Sheets sync failed orderid=%s: %s", orderid, last_error)
     return False, last_error
 
