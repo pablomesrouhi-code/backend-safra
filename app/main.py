@@ -31,7 +31,7 @@ async def _database_warmup_loop() -> None:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    logger.info("Safra Skin API starting")
+    logger.info("SAFRASKIN MOROCCO API starting")
     logger.info("DATABASE_URL (masked): %s", mask_database_url(normalized_database_url()))
     asyncio.create_task(_database_warmup_loop())
     try:
@@ -42,8 +42,8 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(
-    title="Safra Skin API",
-    version="1.0.0",
+    title="Safraskin Morocco API",
+    version="2.0.0",
     lifespan=lifespan,
 )
 

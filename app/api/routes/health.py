@@ -12,11 +12,11 @@ def _check_sheets_webhook() -> dict:
     if not settings.sheets_enabled:
         return {"configured": False, "reachable": False, "hint": "Set GOOGLE_SHEETS_WEBHOOK_URL"}
 
-    fmt_err = validate_sheets_webhook_url(settings.GOOGLE_SHEETS_WEBHOOK_URL)
+    fmt_err = validate_sheets_webhook_url(settings.sheets_webhook_url)
     if fmt_err:
         return {"configured": True, "reachable": False, "hint": fmt_err}
 
-    url = normalize_sheets_webhook_url(settings.GOOGLE_SHEETS_WEBHOOK_URL)
+    url = normalize_sheets_webhook_url(settings.sheets_webhook_url)
     try:
         with httpx.Client(timeout=15.0) as client:
             resp = client.get(url, follow_redirects=True)
@@ -46,6 +46,8 @@ def health() -> dict:
     sheets = _check_sheets_webhook()
 
     return {
+        "app": "safraskin-morocco",
+        "market": "MA",
         "status": "ok" if db_ok else "degraded",
         "database": db_ok,
         "database_url_scheme": mask_database_url(normalized_database_url()).split("://")[0],

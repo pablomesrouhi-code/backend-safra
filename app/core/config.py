@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     )
 
     GOOGLE_SHEETS_WEBHOOK_URL: str = ""
+    GOOGLE_SHEET_WEBHOOK_URL: str = ""
 
     META_PIXEL_ID: str = ""
     META_ACCESS_TOKEN: str = ""
@@ -30,10 +31,11 @@ class Settings(BaseSettings):
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
 
-    ORDER_NUMBER_PREFIX: str = "nama"
-    UPSELL_PRICE_SAR: int = 99
+    ORDER_NUMBER_PREFIX: str = "safra"
+    UPSELL_PRICE_MAD: int = 120
+    UPSELL_PRICE_SAR: int = 120
 
-    # MaxMind GeoLite2 (optional — CAPI country + optional KSA-only orders)
+    # MaxMind GeoLite2 (optional)
     MAXMIND_ACCOUNT_ID: str = ""
     MAXMIND_LICENSE_KEY: str = ""
     MAXMIND_GEOIP_DB_PATH: str = "./data/GeoLite2-Country.mmdb"
@@ -44,8 +46,12 @@ class Settings(BaseSettings):
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
     @property
+    def sheets_webhook_url(self) -> str:
+        return (self.GOOGLE_SHEETS_WEBHOOK_URL or self.GOOGLE_SHEET_WEBHOOK_URL).strip()
+
+    @property
     def sheets_enabled(self) -> bool:
-        return bool(self.GOOGLE_SHEETS_WEBHOOK_URL.strip())
+        return bool(self.sheets_webhook_url)
 
     @property
     def meta_capi_enabled(self) -> bool:

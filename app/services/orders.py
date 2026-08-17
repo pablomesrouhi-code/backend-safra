@@ -1,3 +1,4 @@
+import logging
 import random
 import string
 
@@ -8,15 +9,17 @@ from app.models.order import Order, OrderItem
 from app.schemas.order import CreateOrderRequest
 from app.services.geoip import lookup_ip
 from app.services.integrations import fire_purchase_events, sync_order_to_sheets
-from app.services.phone import normalize_ksa_phone
+from app.services.phone import normalize_ma_phone
 from app.services.pricing import (
     SLUG_TO_NAME_AR,
     VALID_SKUS,
     calculate_grand_total,
-    calculate_tier,
+    offer_price,
     slug_for_sku,
 )
 from app.services.sheets import build_sheets_payload
+
+logger = logging.getLogger(__name__)
 
 
 class OrderValidationError(ValueError):
@@ -37,6 +40,7 @@ def validate_and_price(payload: CreateOrderRequest) -> dict:
 
     slugs: list[str] = []
     line_items: list[dict] = []
+    merchandise = 0
 
     for item in payload.items:
         sku = item.sku.strip().upper()
@@ -48,12 +52,14 @@ def validate_and_price(payload: CreateOrderRequest) -> dict:
         slug = slug_for_sku(sku)
         assert slug is not None
         slugs.append(slug)
+        line_total = offer_price(item.qty)
+        merchandise += line_total
         line_items.append(
             {
                 "sku": sku,
                 "product_slug": slug,
                 "quantity": item.qty,
-                "unit_reference_price_sar": 199,
+                "unit_reference_price_sar": line_total,
             }
         )
 
@@ -65,19 +71,23 @@ def validate_and_price(payload: CreateOrderRequest) -> dict:
         upsell_sku_norm = payload.upsell_sku.strip().upper()
         if upsell_sku_norm not in VALID_SKUS:
             raise OrderValidationError("منتج الإضافة غير صالح", "INVALID_UPSELL")
-        expected = settings.UPSELL_PRICE_SAR
-        if payload.upsell_price_sar is not None and payload.upsell_price_sar != expected:
+        expected = settings.UPSELL_PRICE_MAD
+        incoming = (
+            payload.upsell_price_mad
+            if payload.upsell_price_mad is not None
+            else payload.upsell_price_sar
+        )
+        if incoming is not None and incoming != expected:
             raise OrderValidationError("سعر الإضافة غير صحيح", "PRICE_MISMATCH")
         upsell_price = expected
 
-    total_qty = sum(item.qty for item in payload.items)
-    tier_count, tier_total = calculate_tier(slugs, total_qty)
-    grand_total = calculate_grand_total(tier_total, upsell_accepted, upsell_price)
+    grand_total = calculate_grand_total(merchandise, upsell_accepted, upsell_price)
+    tier_count = min(max(sum(item.qty for item in payload.items), 1), 3)
 
     return {
         "line_items": line_items,
         "tier_count": tier_count,
-        "tier_total_sar": tier_total,
+        "tier_total_sar": merchandise,
         "upsell_accepted": upsell_accepted,
         "upsell_sku": upsell_sku_norm,
         "upsell_price_sar": upsell_price if upsell_accepted else None,
@@ -92,14 +102,9 @@ async def create_order(
     client_ip: str | None = None,
 ) -> Order:
     geo = lookup_ip(client_ip)
-    if settings.GEOIP_ENFORCE_KSA and client_ip and geo.get("country_code") not in (None, "SA"):
-        raise OrderValidationError(
-            "الطلبات متاحة داخل المملكة فقط",
-            "GEO_NOT_KSA",
-        )
 
     try:
-        e164, display = normalize_ksa_phone(payload.customer_phone)
+        e164, display = normalize_ma_phone(payload.customer_phone)
     except ValueError as exc:
         code = getattr(exc, "code", "INVALID_PHONE")
         raise OrderValidationError(str(exc), code) from exc
@@ -146,10 +151,14 @@ async def create_order(
         slug_for_sku=slug_for_sku,
         slug_to_name_ar=SLUG_TO_NAME_AR,
     )
-    synced, sheets_sync_error = await sync_order_to_sheets(sheets_payload)
-    if synced:
-        order.sheets_synced = True
-        db.commit()
+    sheets_sync_error: str | None = None
+    if settings.sheets_enabled:
+        synced, sheets_sync_error = await sync_order_to_sheets(sheets_payload)
+        if synced:
+            order.sheets_synced = True
+            db.commit()
+    else:
+        logger.info("Sheets webhook not set — order %s saved in database only", order.order_number)
 
     await fire_purchase_events(
         {

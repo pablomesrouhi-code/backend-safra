@@ -5,11 +5,11 @@ from zoneinfo import ZoneInfo
 
 from app.models.order import Order
 
-KSA_TZ = ZoneInfo("Asia/Riyadh")
+MA_TZ = ZoneInfo("Africa/Casablanca")
 
 
 def format_phone_for_sheets(e164: str) -> str:
-    """96650475233 — no plus sign."""
+    """2126XXXXXXXX — no plus sign."""
     return (e164 or "").lstrip("+")
 
 
@@ -46,18 +46,18 @@ def build_sheets_payload(
         skus.append(line["sku"])
         quantities.append(str(line["quantity"]))
 
-    now_ksa = datetime.now(KSA_TZ)
+    now_ma = datetime.now(MA_TZ)
 
     return {
-        "date": now_ksa.strftime("%d/%m/%Y"),
+        "date": now_ma.strftime("%d/%m/%Y"),
         "orderid": order.order_number,
-        "country": "KSA",
+        "country": "MA",
         "name": order.customer_name,
         "phone": format_phone_for_sheets(order.customer_phone),
         "product": "/".join(product_names),
         "sku": "/".join(skus),
         "quantity": "/".join(quantities),
         "total_price": order.grand_total_sar,
-        "currency": "SAR",
+        "currency": "MAD",
         "status": "",
     }

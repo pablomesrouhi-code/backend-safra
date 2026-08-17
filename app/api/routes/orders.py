@@ -21,8 +21,10 @@ async def post_order(
     return CreateOrderResponse(
         order_id=order.order_number,
         grand_total_sar=order.grand_total_sar,
+        grand_total_mad=order.grand_total_sar,
         tier_total_sar=order.tier_total_sar,
         upsell_total_sar=upsell_total,
+        upsell_total_mad=upsell_total,
         status=order.status,
         thank_you_path=f"/thank-you/{order.order_number}",
         sheets_synced=order.sheets_synced,

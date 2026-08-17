@@ -1,34 +1,46 @@
 from fastapi import APIRouter
 
 from app.schemas.product import ProductOut
-from app.services.pricing import SLUG_TO_NAME_AR, SLUG_TO_SKU
+from app.services.pricing import SLUG_TO_NAME_AR, SLUG_TO_SKU, TIER_PRICES
 
 router = APIRouter(prefix="/api/v1", tags=["products"])
 
 PRODUCTS: list[ProductOut] = [
     ProductOut(
-        slug="cyclecalm",
-        sku=SLUG_TO_SKU["cyclecalm"],
-        name_ar=SLUG_TO_NAME_AR["cyclecalm"],
-        name_en="Cycle Calm PMS Gummies",
-        unit_price_sar=199,
-        cross_sell_slugs=["oralflora", "clearbalance"],
+        slug="clarelia",
+        sku=SLUG_TO_SKU["clarelia"],
+        name_ar=SLUG_TO_NAME_AR["clarelia"],
+        name_en="Clarélia",
+        unit_price_sar=TIER_PRICES[1],
+        unit_price_mad=TIER_PRICES[1],
+        cross_sell_slugs=["luminora", "capilys", "femmelia"],
     ),
     ProductOut(
-        slug="oralflora",
-        sku=SLUG_TO_SKU["oralflora"],
-        name_ar=SLUG_TO_NAME_AR["oralflora"],
-        name_en="Oral Flora Probiotic Gummies",
-        unit_price_sar=199,
-        cross_sell_slugs=["cyclecalm", "clearbalance"],
+        slug="femmelia",
+        sku=SLUG_TO_SKU["femmelia"],
+        name_ar=SLUG_TO_NAME_AR["femmelia"],
+        name_en="Femmélia",
+        unit_price_sar=TIER_PRICES[1],
+        unit_price_mad=TIER_PRICES[1],
+        cross_sell_slugs=["clarelia", "luminora", "capilys"],
     ),
     ProductOut(
-        slug="clearbalance",
-        sku=SLUG_TO_SKU["clearbalance"],
-        name_ar=SLUG_TO_NAME_AR["clearbalance"],
-        name_en="Clear Balance Skin Gummies",
-        unit_price_sar=199,
-        cross_sell_slugs=["cyclecalm", "oralflora"],
+        slug="capilys",
+        sku=SLUG_TO_SKU["capilys"],
+        name_ar=SLUG_TO_NAME_AR["capilys"],
+        name_en="Capilys",
+        unit_price_sar=TIER_PRICES[1],
+        unit_price_mad=TIER_PRICES[1],
+        cross_sell_slugs=["luminora", "clarelia", "femmelia"],
+    ),
+    ProductOut(
+        slug="luminora",
+        sku=SLUG_TO_SKU["luminora"],
+        name_ar=SLUG_TO_NAME_AR["luminora"],
+        name_en="Luminora",
+        unit_price_sar=TIER_PRICES[1],
+        unit_price_mad=TIER_PRICES[1],
+        cross_sell_slugs=["clarelia", "capilys", "femmelia"],
     ),
 ]
 

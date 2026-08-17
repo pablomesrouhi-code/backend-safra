@@ -74,7 +74,7 @@ async def sync_order_to_sheets(payload: dict) -> tuple[bool, str | None]:
         logger.warning("%s — order %s", msg, payload.get("orderid"))
         return False, msg
 
-    raw_url = settings.GOOGLE_SHEETS_WEBHOOK_URL
+    raw_url = settings.sheets_webhook_url
     url_error = validate_sheets_webhook_url(raw_url)
     if url_error:
         logger.error("%s — order %s", url_error, payload.get("orderid"))
