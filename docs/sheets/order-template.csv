@@ -1,1 +1,2 @@
-date,orderid,country,name,phone,product,sku,quantity,total_price,currency,status
+DATE,ORDERID,COUNTRY,NAME,PHONE,PRODUCT,SKU,QUANTITY,TOTAL PRICE,CURRENCE,STATUS
+01/05/2026,nama7k2m9q1x,MAROC,سارة بنعلي,0682767535,كريم تفتيح الوجه/زيت تساقط الشعر · 60 مل,SK482917CL/SK156820CP,2/2,438,DH,

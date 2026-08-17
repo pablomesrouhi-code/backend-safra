@@ -2,6 +2,12 @@ TIER_PRICES: dict[int, int] = {1: 219, 2: 279, 3: 319}
 UPSELL_PRICE_MAD = 120
 
 SKU_TO_SLUG: dict[str, str] = {
+    "SK482917CL": "clarelia",
+    "SK739405FM": "femmelia",
+    "SK156820CP": "capilys",
+    "SK904371LM": "luminora",
+    "SK618204P4": "pack-4",
+    "SK275839P3": "pack-3",
     "SK-CLAR-01": "clarelia",
     "SK-FEMM-02": "femmelia",
     "SK-CAPI-03": "capilys",
@@ -11,12 +17,12 @@ SKU_TO_SLUG: dict[str, str] = {
 }
 
 SLUG_TO_SKU: dict[str, str] = {
-    "clarelia": "SK-CLAR-01",
-    "femmelia": "SK-FEMM-02",
-    "capilys": "SK-CAPI-03",
-    "luminora": "SK-LUMI-04",
-    "pack-4": "SK-PACK-04",
-    "pack-3": "SK-PACK-03",
+    "clarelia": "SK482917CL",
+    "femmelia": "SK739405FM",
+    "capilys": "SK156820CP",
+    "luminora": "SK904371LM",
+    "pack-4": "SK618204P4",
+    "pack-3": "SK275839P3",
 }
 
 SLUG_TO_NAME_AR: dict[str, str] = {
@@ -29,12 +35,25 @@ SLUG_TO_NAME_AR: dict[str, str] = {
 }
 
 PACK_PRICES: dict[str, int] = {
+    "SK618204P4": 699,
+    "SK275839P3": 549,
     "SK-PACK-04": 699,
     "SK-PACK-03": 549,
 }
 
 VALID_SKUS = frozenset(SKU_TO_SLUG.keys())
-PRODUCT_SKUS = frozenset({"SK-CLAR-01", "SK-FEMM-02", "SK-CAPI-03", "SK-LUMI-04"})
+PRODUCT_SKUS = frozenset(
+    {
+        "SK482917CL",
+        "SK739405FM",
+        "SK156820CP",
+        "SK904371LM",
+        "SK-CLAR-01",
+        "SK-FEMM-02",
+        "SK-CAPI-03",
+        "SK-LUMI-04",
+    }
+)
 
 
 def slug_for_sku(sku: str) -> str | None:

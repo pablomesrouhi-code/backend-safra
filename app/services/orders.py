@@ -13,6 +13,7 @@ from app.services.phone import normalize_ma_phone
 from app.services.pricing import (
     PRODUCT_SKUS,
     SLUG_TO_NAME_AR,
+    SLUG_TO_SKU,
     VALID_SKUS,
     calculate_grand_total,
     line_price,
@@ -57,7 +58,7 @@ def validate_and_price(payload: CreateOrderRequest) -> dict:
         merchandise += line_total
         line_items.append(
             {
-                "sku": sku,
+                "sku": SLUG_TO_SKU[slug],
                 "product_slug": slug,
                 "quantity": item.qty,
                 "unit_reference_price_sar": line_total,
@@ -81,6 +82,9 @@ def validate_and_price(payload: CreateOrderRequest) -> dict:
         if incoming is not None and incoming != expected:
             raise OrderValidationError("سعر الإضافة غير صحيح", "PRICE_MISMATCH")
         upsell_price = expected
+        upsell_slug = slug_for_sku(upsell_sku_norm)
+        if upsell_slug:
+            upsell_sku_norm = SLUG_TO_SKU[upsell_slug]
 
     grand_total = calculate_grand_total(merchandise, upsell_accepted, upsell_price)
     tier_count = min(max(sum(item.qty for item in payload.items), 1), 3)

@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     API_HOST: str = "0.0.0.0"
     API_PORT: int = 8000
 
-    ORDER_NUMBER_PREFIX: str = "safra"
+    ORDER_NUMBER_PREFIX: str = "nama"
     UPSELL_PRICE_MAD: int = 120
     UPSELL_PRICE_SAR: int = 120
 
