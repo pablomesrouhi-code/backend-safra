@@ -11,10 +11,11 @@ from app.services.geoip import lookup_ip
 from app.services.integrations import fire_purchase_events, sync_order_to_sheets
 from app.services.phone import normalize_ma_phone
 from app.services.pricing import (
+    PRODUCT_SKUS,
     SLUG_TO_NAME_AR,
     VALID_SKUS,
     calculate_grand_total,
-    offer_price,
+    line_price,
     slug_for_sku,
 )
 from app.services.sheets import build_sheets_payload
@@ -52,7 +53,7 @@ def validate_and_price(payload: CreateOrderRequest) -> dict:
         slug = slug_for_sku(sku)
         assert slug is not None
         slugs.append(slug)
-        line_total = offer_price(item.qty)
+        line_total = line_price(sku, item.qty)
         merchandise += line_total
         line_items.append(
             {
@@ -69,7 +70,7 @@ def validate_and_price(payload: CreateOrderRequest) -> dict:
 
     if upsell_accepted:
         upsell_sku_norm = payload.upsell_sku.strip().upper()
-        if upsell_sku_norm not in VALID_SKUS:
+        if upsell_sku_norm not in PRODUCT_SKUS:
             raise OrderValidationError("منتج الإضافة غير صالح", "INVALID_UPSELL")
         expected = settings.UPSELL_PRICE_MAD
         incoming = (
