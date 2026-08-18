@@ -2,7 +2,6 @@ from fastapi import APIRouter
 
 from app.schemas.product import ProductOut
 from app.services.pricing import (
-    CLARELIA_LUMINORA_TIER_PRICES,
     FEMMELIA_TIER_PRICES,
     SLUG_TO_NAME_AR,
     SLUG_TO_SKU,
@@ -17,8 +16,8 @@ PRODUCTS: list[ProductOut] = [
         sku=SLUG_TO_SKU["clarelia"],
         name_ar=SLUG_TO_NAME_AR["clarelia"],
         name_en="Clarélia",
-        unit_price_sar=CLARELIA_LUMINORA_TIER_PRICES[1],
-        unit_price_mad=CLARELIA_LUMINORA_TIER_PRICES[1],
+        unit_price_sar=TIER_PRICES[1],
+        unit_price_mad=TIER_PRICES[1],
         cross_sell_slugs=["luminora", "capilys", "femmelia"],
     ),
     ProductOut(
@@ -44,8 +43,8 @@ PRODUCTS: list[ProductOut] = [
         sku=SLUG_TO_SKU["luminora"],
         name_ar=SLUG_TO_NAME_AR["luminora"],
         name_en="Luminora",
-        unit_price_sar=CLARELIA_LUMINORA_TIER_PRICES[1],
-        unit_price_mad=CLARELIA_LUMINORA_TIER_PRICES[1],
+        unit_price_sar=TIER_PRICES[1],
+        unit_price_mad=TIER_PRICES[1],
         cross_sell_slugs=["clarelia", "capilys", "femmelia"],
     ),
 ]
