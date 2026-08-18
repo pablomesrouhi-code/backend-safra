@@ -14,6 +14,7 @@ from app.services.pricing import (
     PRODUCT_SKUS,
     SLUG_TO_NAME_AR,
     SLUG_TO_SKU,
+    UPSELL_PRICE_MAD,
     VALID_SKUS,
     calculate_grand_total,
     line_price,
@@ -73,7 +74,7 @@ def validate_and_price(payload: CreateOrderRequest) -> dict:
         upsell_sku_norm = payload.upsell_sku.strip().upper()
         if upsell_sku_norm not in PRODUCT_SKUS:
             raise OrderValidationError("منتج الإضافة غير صالح", "INVALID_UPSELL")
-        expected = settings.UPSELL_PRICE_MAD
+        expected = UPSELL_PRICE_MAD
         incoming = (
             payload.upsell_price_mad
             if payload.upsell_price_mad is not None

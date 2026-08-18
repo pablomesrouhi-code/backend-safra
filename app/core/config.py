@@ -32,8 +32,8 @@ class Settings(BaseSettings):
     API_PORT: int = 8000
 
     ORDER_NUMBER_PREFIX: str = "nama"
-    UPSELL_PRICE_MAD: int = 120
-    UPSELL_PRICE_SAR: int = 120
+    UPSELL_PRICE_MAD: int = 150
+    UPSELL_PRICE_SAR: int = 150
 
     # MaxMind GeoLite2 (optional)
     MAXMIND_ACCOUNT_ID: str = ""

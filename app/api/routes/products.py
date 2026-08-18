@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from app.schemas.product import ProductOut
-from app.services.pricing import SLUG_TO_NAME_AR, SLUG_TO_SKU, TIER_PRICES
+from app.services.pricing import FEMMELIA_TIER_PRICES, SLUG_TO_NAME_AR, SLUG_TO_SKU, TIER_PRICES
 
 router = APIRouter(prefix="/api/v1", tags=["products"])
 
@@ -20,8 +20,8 @@ PRODUCTS: list[ProductOut] = [
         sku=SLUG_TO_SKU["femmelia"],
         name_ar=SLUG_TO_NAME_AR["femmelia"],
         name_en="Femmélia",
-        unit_price_sar=TIER_PRICES[1],
-        unit_price_mad=TIER_PRICES[1],
+        unit_price_sar=FEMMELIA_TIER_PRICES[1],
+        unit_price_mad=FEMMELIA_TIER_PRICES[1],
         cross_sell_slugs=["clarelia", "luminora", "capilys"],
     ),
     ProductOut(

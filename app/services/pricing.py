@@ -1,5 +1,6 @@
 TIER_PRICES: dict[int, int] = {1: 219, 2: 279, 3: 319}
-UPSELL_PRICE_MAD = 120
+FEMMELIA_TIER_PRICES: dict[int, int] = {1: 279, 2: 349, 3: 419}
+UPSELL_PRICE_MAD = 150
 
 SKU_TO_SLUG: dict[str, str] = {
     "SK482917CL": "clarelia",
@@ -60,21 +61,22 @@ def slug_for_sku(sku: str) -> str | None:
     return SKU_TO_SLUG.get(sku.upper() if sku else "")
 
 
-def offer_price(qty: int) -> int:
+def offer_price(qty: int, slug: str | None = None) -> int:
+    prices = FEMMELIA_TIER_PRICES if slug == "femmelia" else TIER_PRICES
     if qty <= 0:
         return 0
     if qty == 1:
-        return TIER_PRICES[1]
+        return prices[1]
     if qty == 2:
-        return TIER_PRICES[2]
-    return TIER_PRICES[3]
+        return prices[2]
+    return prices[3]
 
 
 def line_price(sku: str, qty: int) -> int:
     pack = PACK_PRICES.get(sku.upper() if sku else "")
     if pack is not None:
         return pack
-    return offer_price(qty)
+    return offer_price(qty, slug_for_sku(sku))
 
 
 def calculate_tier(unique_slugs: list[str], total_qty: int = 0) -> tuple[int, int]:
