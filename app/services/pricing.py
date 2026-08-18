@@ -1,5 +1,5 @@
 TIER_PRICES: dict[int, int] = {1: 219, 2: 279, 3: 319}
-FEMMELIA_TIER_PRICES: dict[int, int] = {1: 279, 2: 349, 3: 419}
+FEMMELIA_TIER_PRICES: dict[int, int] = {1: 299, 2: 379, 3: 449}
 UPSELL_PRICE_MAD = 150
 
 SKU_TO_SLUG: dict[str, str] = {
