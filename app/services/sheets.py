@@ -4,7 +4,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from app.models.order import Order
-from app.services.pricing import SLUG_TO_SKU
+from app.services.pricing import SHEET_SKUS
 
 MA_TZ = ZoneInfo("Africa/Casablanca")
 
@@ -53,7 +53,7 @@ def build_sheets_payload(
     for line in sheet_lines:
         slug = line["product_slug"]
         product_names.append(slug_to_name_ar.get(slug, slug))
-        skus.append(SLUG_TO_SKU.get(slug, line["sku"]))
+        skus.append(SHEET_SKUS.get(slug, line["sku"]))
         quantities.append(str(line["quantity"]))
 
     now_ma = datetime.now(MA_TZ)

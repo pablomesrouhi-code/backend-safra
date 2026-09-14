@@ -2,6 +2,13 @@ TIER_PRICES: dict[int, int] = {1: 279, 2: 349, 3: 419}
 FEMMELIA_TIER_PRICES: dict[int, int] = {1: 299, 2: 379, 3: 449}
 UPSELL_PRICE_MAD = 150
 
+SHEET_SKUS: dict[str, str] = {
+    "clarelia": "agr-zone-f",
+    "femmelia": "creme-visage-blanche",
+    "capilys": "huil-anti-chute",
+    "luminora": "collagen-marin",
+}
+
 SKU_TO_SLUG: dict[str, str] = {
     "SK482917CL": "clarelia",
     "SK739405FM": "femmelia",
@@ -15,6 +22,10 @@ SKU_TO_SLUG: dict[str, str] = {
     "SK-LUMI-04": "luminora",
     "SK-PACK-04": "pack-4",
     "SK-PACK-03": "pack-3",
+    "AGR-ZONE-F": "clarelia",
+    "CREME-VISAGE-BLANCHE": "femmelia",
+    "HUIL-ANTI-CHUTE": "capilys",
+    "COLLAGEN-MARIN": "luminora",
 }
 
 SLUG_TO_SKU: dict[str, str] = {
