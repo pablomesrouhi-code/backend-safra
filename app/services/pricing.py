@@ -1,5 +1,6 @@
-TIER_PRICES: dict[int, int] = {1: 279, 2: 349, 3: 419}
-FEMMELIA_TIER_PRICES: dict[int, int] = {1: 299, 2: 379, 3: 449}
+TIER_PRICES: dict[int, int] = {1: 219, 2: 279, 3: 349}
+LUMINORA_TIER_PRICES: dict[int, int] = {1: 199, 2: 249, 3: 299}
+FEMMELIA_TIER_PRICES: dict[int, int] = {1: 279, 2: 339, 3: 399}
 UPSELL_PRICE_MAD = 150
 
 SHEET_SKUS: dict[str, str] = {
@@ -47,10 +48,10 @@ SLUG_TO_NAME_AR: dict[str, str] = {
 }
 
 PACK_PRICES: dict[str, int] = {
-    "SK618204P4": 699,
-    "SK275839P3": 549,
-    "SK-PACK-04": 699,
-    "SK-PACK-03": 549,
+    "SK618204P4": 449,
+    "SK275839P3": 399,
+    "SK-PACK-04": 449,
+    "SK-PACK-03": 399,
 }
 
 VALID_SKUS = frozenset(SKU_TO_SLUG.keys())
@@ -73,7 +74,12 @@ def slug_for_sku(sku: str) -> str | None:
 
 
 def offer_price(qty: int, slug: str | None = None) -> int:
-    prices = FEMMELIA_TIER_PRICES if slug == "femmelia" else TIER_PRICES
+    if slug == "femmelia":
+        prices = FEMMELIA_TIER_PRICES
+    elif slug == "luminora":
+        prices = LUMINORA_TIER_PRICES
+    else:
+        prices = TIER_PRICES
     if qty <= 0:
         return 0
     if qty == 1:
@@ -94,7 +100,7 @@ def calculate_tier(unique_slugs: list[str], total_qty: int = 0) -> tuple[int, in
     unique = set(unique_slugs)
     if len(unique) == 1 and total_qty > 0:
         count = min(max(total_qty, 1), 3)
-        return count, TIER_PRICES[count]
+        return count, offer_price(count, next(iter(unique)))
     count = min(len(unique), 3) or 1
     return count, TIER_PRICES[count]
 
